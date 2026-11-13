@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "esp_now.h"
 
+
 // hardware macros
 #define HIGH                1
 #define LOW                 0
@@ -50,10 +51,16 @@ typedef struct {
     char msg[MESSAGE_LENGTH];
 } espnow_data_t;
 
+typedef enum {
+    DISCOVERY,
+    AUTHENTICATION,
+    SESSION_OK,
+} session_state_t;
+
 enum {
-    EXAMPLE_ESPNOW_DATA_BROADCAST,
-    EXAMPLE_ESPNOW_DATA_UNICAST,
-    EXAMPLE_ESPNOW_DATA_MAX,
+    ESPNOW_DATA_BROADCAST,
+    ESPNOW_DATA_UNICAST,
+    ESPNOW_DATA_MAX,
 };
 
 #endif /* MAIN_H */

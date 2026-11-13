@@ -20,6 +20,19 @@
 #include "esp_mac.h"
 #include "esp_now.h"
 
+// Primitive and Crypt Libraries
+// #include <ascon/api.h>
+// #include <ascon/ascon.h>
+// #include <ascon/constants.h>
+// #include <ascon/crypto_aead.h>
+
+/**
+ * Define the types of radio as either:
+ * - RADIO_CLIENT
+ * - RADIO_SERVER
+ */ 
+#define RADIO_CLIENT
+
 static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
 #define ESPNOW_MAXDELAY 512
@@ -29,7 +42,54 @@ static const uint8_t WIFI_CHANNEL = 10; //WiFi channel to communicate over
 
 static QueueHandle_t s_espnow_queue = NULL; // event prod-con queue
 
-static bool has_peer = false;
+static bool s_has_peer = false;
+static session_state_t s_session_state = DISCOVERY;
+
+/*
+initialize the espnow library
+Return:
+ - ESP_ERROR or ESP_OK
+*/
+static esp_err_t init_espnow() {
+    // initialize event producer-consumer queue
+    s_espnow_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(espnow_event_t));
+    if(s_espnow_queue == NULL) {
+        ESP_LOGE(TAG, "malloc event queue fail");
+        return ESP_FAIL;
+    }
+
+    // initialize the callback functions
+    ESP_ERROR_CHECK( esp_now_init() );
+    ESP_ERROR_CHECK( esp_now_register_send_cb(send_cb) );
+    ESP_ERROR_CHECK( esp_now_register_recv_cb(recv_cb) );
+
+    // setup broadcast mode
+    esp_now_peer_info_t peer;
+    peer.channel = WIFI_CHANNEL;
+    peer.ifidx = WIFI_IF_STA;
+    peer.encrypt = false;
+    memcpy(peer.peer_addr, s_broadcast_mac, ESP_NOW_ETH_ALEN);
+    ESP_ERROR_CHECK( esp_now_add_peer(&peer) );
+
+    return ESP_OK;
+}
+
+/*
+shutdown espnow if we run into any issues.
+*/
+static void espnow_deinit(espnow_data_t *send_param)
+{
+    espnow_event_t evt;
+
+    while (xQueueReceive(s_espnow_queue, &evt, 0) == pdTRUE) {
+        if (evt.id == ESPNOW_RECV_CB_EVT) {
+            free(evt.info.recv_cb.data);
+        }
+    }
+    vQueueDelete(s_espnow_queue);
+    s_espnow_queue = NULL;
+    esp_now_deinit();
+}
 
 /*
 Initialize the wifi radio. Communicates over 2.4 GhZ using IEEE 802.11
@@ -91,6 +151,10 @@ static void recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, i
     // receive the data
     recv->data_len = len; // length and espnow_data_t data length should be the same
     recv->data = malloc(len);
+    if (recv->data == NULL) {
+        ESP_LOGE("RECV_CB", "malloc receive data failed");
+        return;
+    }
     memcpy(recv->data, data, len);
     memcpy(recv->mac_addr, mac_addr, ESP_NOW_ETH_ALEN);    
 
@@ -101,58 +165,60 @@ static void recv_cb(const esp_now_recv_info_t *recv_info, const uint8_t *data, i
     }
 }
 
-/*
-shutdown espnow if we run into any issues.
-*/
-static void espnow_deinit(espnow_data_t *send_param)
-{
-    vQueueDelete(s_espnow_queue);
-    s_espnow_queue = NULL;
-    esp_now_deinit();
-}
-
-/*
-initialize the espnow library
-Return:
- - ESP_ERROR or ESP_OK
-*/
-static esp_err_t init_espnow() {
-    // initialize event producer-consumer queue
-    s_espnow_queue = xQueueCreate(ESPNOW_QUEUE_SIZE, sizeof(espnow_event_t));
-    if(s_espnow_queue == NULL) {
-        ESP_LOGE(TAG, "malloc event queue fail");
-        return ESP_FAIL;
-    }
-
-    // initialize the callback functions
-    ESP_ERROR_CHECK( esp_now_init() );
-    ESP_ERROR_CHECK( esp_now_register_send_cb(send_cb) );
-    ESP_ERROR_CHECK( esp_now_register_recv_cb(recv_cb) );
-
-    // setup broadcast mode
-    esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
-    if(peer == NULL) {
-        ESP_LOGE(TAG, "malloc event fail");
-        vQueueDelete(s_espnow_queue);
-        s_espnow_queue = NULL;
-        esp_now_deinit();
-
-        return ESP_FAIL;
-    }
-    memset(peer, 0, sizeof(esp_now_peer_info_t));
-    peer->channel = WIFI_CHANNEL;
-    peer->ifidx = WIFI_IF_STA;
-    peer->encrypt = false;
-    memcpy(peer->peer_addr, s_broadcast_mac, ESP_NOW_ETH_ALEN);
-    ESP_ERROR_CHECK( esp_now_add_peer(peer) );
-    free(peer);
-
-    return ESP_OK;
-}
 
 /*
 This task consumes available work and processes the data accordingly
 */
+#ifdef RADIO_SERVER
+// static void radio_task(void *pvParamter) {
+
+// }
+#endif
+
+/*
+This task consumes available work and processes the data accordingly
+*/
+#ifdef RADIO_CLIENT
+// static void process_send_event() {
+//     /**
+//      * switch(s_session_sate)
+//      *      case HELLO
+//      *          Broadcast Hello Message
+//      * 
+//      *      case AUTHENTICATE
+//      *          generate signature
+//      *          Unicast Auth Message 
+//      *      
+//      *      case SESSION_OK
+//      *          encrypt message
+//      *          send unicast
+//      */ 
+// }
+
+// static void process_recv_event() {
+//     /**
+//      * switch(s_session_sate)
+//      *      case HELLO
+//      *          if ( msg_recv is HELLO message )
+//      *              get oth_key
+//      *              get oth mac addr
+//      *              set to unicast
+//      *              change callback functions
+//      * 
+//      *              
+//      * 
+//      *              s_session_state = AUTHENTICATE
+//      *                    
+//      *      case AUTHENTICATE
+//      *          get signature
+//      *          biuld signature
+//      * 
+//      *      case SESSION_OK
+//      *          verify signature
+//      *          HKDF
+//      */ 
+// }
+
 static void radio_task(void *pvParameter) {
     (void) pvParameter;
 
@@ -177,9 +243,7 @@ static void radio_task(void *pvParameter) {
                 case ESPNOW_SEND_CB_EVT:
                     ESP_LOGI("RADIO_TASK", "message sent!");
                     // do some data manipulation
-                    data.count += 1;
 
-                    // continue sending out data
                     ESP_ERROR_CHECK( esp_now_send(data.send_peer, (const uint8_t *) &data, sizeof(espnow_data_t)) );
                     vTaskDelay(pdMS_TO_TICKS(200));
                     break;
@@ -187,47 +251,47 @@ static void radio_task(void *pvParameter) {
                 case ESPNOW_RECV_CB_EVT:
                     // get data from event
                     espnow_event_recv_cb_t *recv = &evt.info.recv_cb;
-                    espnow_data_t *recv_data = malloc(sizeof(espnow_data_t));
+                    if (recv->data_len != sizeof(espnow_data_t)) {
+                        ESP_LOGW("RADIO_TASK", "invalid packet length: %d", recv->data_len);
+                        free(recv->data);
+                        break;
+                    }
+                    espnow_data_t recv_data;
                     uint8_t *src_mac = recv->mac_addr;
 
-                    memcpy(recv_data, (espnow_data_t *)recv->data, sizeof(espnow_data_t));
+                    memcpy(&recv_data, recv->data, sizeof(espnow_data_t));
                     
                     // do something with the data
                     ESP_LOGI("RADIO_TASK", 
                         "message received: \n\tcount: %d\n\tmsg: %s\n\tSender MAC: %02x:%02x:%02x:%02x:%02x:%02x", 
-                        recv_data->count, 
-                        recv_data->msg,
+                        recv_data.count,
+                        recv_data.msg,
                         src_mac[0], src_mac[1], src_mac[2], src_mac[3], src_mac[4], src_mac[5]
                     );
-
+                    
                     // we discovered another device, add as a peer and swap target to them
-                    if(!IS_BROADCAST_ADDR(src_mac) && !has_peer) {
+                    if(!IS_BROADCAST_ADDR(src_mac) && !s_has_peer) {
                         ESP_LOGI("RADIO TASK", 
                             "Adding Peer: Sender MAC: %02x:%02x:%02x:%02x:%02x:%02x",
                             src_mac[0], src_mac[1], src_mac[2], src_mac[3], src_mac[4], src_mac[5]
                         );
                         memcpy(data.send_peer, src_mac, ESP_NOW_ETH_ALEN);
 
-                        esp_now_peer_info_t *peer = malloc(sizeof(esp_now_peer_info_t));
-                        if(peer == NULL) {
-                            ESP_LOGE(TAG, "malloc event fail");
-                            vQueueDelete(s_espnow_queue);
-                            espnow_deinit(recv_data);
-                            vTaskDelete(NULL);
-                        }
-                        memset(peer, 0, sizeof(esp_now_peer_info_t));
-                        peer->channel = WIFI_CHANNEL;
-                        peer->ifidx = WIFI_IF_STA;
-                        peer->encrypt = false;
-                        memcpy(peer->peer_addr, src_mac, ESP_NOW_ETH_ALEN);
-                        ESP_ERROR_CHECK( esp_now_add_peer(peer) );
-                        free(peer);
+                        esp_now_peer_info_t peer;
+                        peer.channel = WIFI_CHANNEL;
+                        peer.ifidx = WIFI_IF_STA;
+
+                        // set to true to use built in CCMP espnow
+                        peer.encrypt = false;
+                        memcpy(peer.peer_addr, src_mac, ESP_NOW_ETH_ALEN);
+                        ESP_ERROR_CHECK( esp_now_add_peer(&peer) );
 
                         // change the message to show difference in state
                         memcpy(data.msg, "PEER FOUND", MESSAGE_LENGTH);
-                        has_peer = true;
+                        s_has_peer = true;
                     }
 
+                    free(recv->data);
                     break;
                 default:
                     ESP_LOGW("RADIO_TASK", "invalid event id, exiting.");
@@ -243,6 +307,7 @@ static void radio_task(void *pvParameter) {
                 // log where we sent it to
             case RECV:
                 switch (connection_state):
+                    // hello message
                     case DISCOVERY:
                     case AUTH:
                         if (auth == OK) {
@@ -253,7 +318,7 @@ static void radio_task(void *pvParameter) {
                         */
     // }
 }
-
+#endif
 
 /*
 entry point for application
