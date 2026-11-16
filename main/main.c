@@ -33,7 +33,7 @@
  */
 #define RADIO_CLIENT
 
-static uint8_t s_broadcast_mac[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+static uint8_t BROADCAST_MAC[ESP_NOW_ETH_ALEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 #define ESPNOW_MAXDELAY 512
 
@@ -41,9 +41,6 @@ static const char *TAG = "ESPNOW";
 static const uint8_t WIFI_CHANNEL = 10; // WiFi channel to communicate over
 
 static QueueHandle_t s_espnow_queue = NULL; // event prod-con queue
-
-static bool s_has_peer = false;
-static session_state_t s_session_state = DISCOVERY;
 
 /*
 Initialize the wifi radio. Communicates over 2.4 GhZ using IEEE 802.11
@@ -71,7 +68,7 @@ static void get_mac_address()
 }
 
 /*
-Callback function when a packet is sent
+Callback function after a packet is sent and the radio is ready again
 */
 static void send_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status)
 {
@@ -146,12 +143,12 @@ static esp_err_t init_espnow()
     ESP_ERROR_CHECK(esp_now_register_recv_cb(recv_cb));
 
     // setup broadcast mode
-    esp_now_peer_info_t peer;
-    peer.channel = WIFI_CHANNEL;
-    peer.ifidx = WIFI_IF_STA;
-    peer.encrypt = false;
-    memcpy(peer.peer_addr, s_broadcast_mac, ESP_NOW_ETH_ALEN);
-    ESP_ERROR_CHECK(esp_now_add_peer(&peer));
+    esp_now_peer_info_t send_peer;
+    send_peer.channel = WIFI_CHANNEL;
+    send_peer.ifidx = WIFI_IF_STA;
+    send_peer.encrypt = false;
+    memcpy(send_peer.peer_addr, BROADCAST_MAC, ESP_NOW_ETH_ALEN);
+    ESP_ERROR_CHECK(esp_now_add_peer(&send_peer));
 
     return ESP_OK;
 }
@@ -159,93 +156,193 @@ static esp_err_t init_espnow()
 /*
 shutdown espnow if we run into any issues.
 */
-static void espnow_deinit(espnow_data_t *send_param)
-{
-    espnow_event_t evt;
+// static void espnow_deinit(espnow_data_t *p_send_param)
+// {
+//     espnow_event_t evt;
 
-    while (xQueueReceive(s_espnow_queue, &evt, 0) == pdTRUE)
-    {
-        if (evt.id == ESPNOW_RECV_CB_EVT)
-        {
-            free(evt.info.recv_cb.data);
-        }
-    }
-    vQueueDelete(s_espnow_queue);
-    s_espnow_queue = NULL;
-    esp_now_deinit();
-}
+//     while (xQueueReceive(s_espnow_queue, &evt, 0) == pdTRUE)
+//     {
+//         if (evt.id == ESPNOW_RECV_CB_EVT)
+//         {
+//             free(evt.info.recv_cb.data);
+//         }
+//     }
+//     vQueueDelete(s_espnow_queue);
+//     s_espnow_queue = NULL;
+//     esp_now_deinit();
+// }
 
 /*
 This task consumes available work and processes the data accordingly
 */
 #ifdef RADIO_SERVER
-// static void radio_task(void *pvParamter) {
-
-// }
-#endif
+#endif /* RADIO_SERVER */
 
 /*
 This task consumes available work and processes the data accordingly
 */
-#ifdef RADIO_CLIENT
-// static void process_send_event() {
-//     /**
-//      * switch(s_session_sate)
-//      *      case HELLO
-//      *          Broadcast Hello Message
-//      *
-//      *      case AUTHENTICATE
-//      *          generate signature
-//      *          Unicast Auth Message
-//      *
-//      *      case SESSION_OK
-//      *          encrypt message
-//      *          send unicast
-//      */
-// }
+static void process_send_event(espnow_communication_params_t *params, espnow_event_send_cb_t *send)
+{
+    espnow_crypto_state_t *state = &params->espnow_crypto_state;
+    espnow_data_peer_info_t *send_peer = &params->send_peer;
+    espnow_data_public_keys_t *pubkeys = &params->keys.public;
 
-// static void process_recv_event() {
-//     /**
-//      * switch(s_session_sate)
-//      *      case HELLO
-//      *          if ( msg_recv is HELLO message )
-//      *              get oth_key
-//      *              get oth mac addr
-//      *              set to unicast
-//      *              change callback functions
-//      *
-//      *
-//      *
-//      *              s_session_state = AUTHENTICATE
-//      *
-//      *      case AUTHENTICATE
-//      *          get signature
-//      *          biuld signature
-//      *
-//      *      case SESSION_OK
-//      *          verify signature
-//      *          HKDF
-//      */
-// }
+    espnow_data_hello_t hello_buf = {
+        .type = params->session_info.type,
+        .version = params->session_info.version,
+        .length = sizeof(espnow_data_hello_t),
+    };
+    memcpy(hello_buf.ed25519_pub, pubkeys->ed25519_pub, ED25519_PUBKEY_LEN);
+    memcpy(hello_buf.x25519_pub, pubkeys->x25519_pub, X25519_EPH_PUBKEY_LEN);
+
+    esp_err_t e;
+
+
+    switch (*state) 
+    {
+        // continually send discovery checks while in broadcast mode
+        // case DISCOVER:
+        //     break;
+
+        // case AUTH:
+        //     break;
+
+        // case SESSION_OK:
+        //     break;
+
+        default:
+#ifdef  RADIO_CLIENT
+            e = esp_now_send(send_peer->addr, (uint8_t *)&hello_buf, sizeof(espnow_data_hello_t));
+            ESP_ERROR_CHECK(e);
+#elif   RADIO_SERVER
+#endif
+
+            if(send->status != ESP_NOW_SEND_SUCCESS) ESP_LOGI("PROCESS_SEND_EVENT()", "message not received by recipient.");
+            // let radio rest
+            vTaskDelay(pdMS_TO_TICKS(100));
+    }
+    //   case HELLO
+    //       Broadcast Hello Message
+
+    //   case AUTHENTICATE
+    //       generate signature
+    //       Unicast Auth Message
+
+    //   case SESSION_OK
+    //       encrypt message
+    //       send unicast
+}
+
+/**
+ * Process the receive data and
+ */
+static void process_recv_event(espnow_communication_params_t *params, espnow_event_recv_cb_t *recv)
+{
+    espnow_crypto_state_t *state = &params->espnow_crypto_state;
+    espnow_data_peer_info_t *peer = &params->send_peer;
+    espnow_data_public_keys_t *peer_keys = &peer->keys;
+
+    switch(*state)
+    {
+        // we received a hello message back from the server, move on to the next state
+        case DISCOVER:
+            // generate relevant cryptographic authentication
+            
+            // get data
+            espnow_data_hello_t recv_data;
+            if(recv->data_len != sizeof(espnow_data_hello_t)) {
+                ESP_LOGI("process_recv_event()::DISCOVER", "Incorrect data received");
+                free(recv->data);
+                return;
+            }
+
+            ESP_LOGI("process_recv_event()::DISCOVER", "Received acknowledgement from server");
+            memcpy(&recv_data, recv->data, sizeof(espnow_data_hello_t));
+            
+            // get receiver MAC address
+            memcpy(peer->addr, recv->mac_addr, ESP_NOW_ETH_ALEN);
+
+            // copy public keys over into persistent data structure
+            memcpy(peer_keys->ed25519_pub, recv_data.ed25519_pub, ED25519_PUBKEY_LEN);
+            memcpy(peer_keys->x25519_pub, recv_data.x25519_pub, X25519_EPH_PUBKEY_LEN);
+            
+            // put device in unicast mode and add peer
+            esp_now_peer_info_t send_peer;
+            send_peer.channel = WIFI_CHANNEL;
+            send_peer.ifidx = WIFI_IF_STA;
+            send_peer.encrypt = false; // set to true to use built in CCMP for espnow
+            memcpy(send_peer.peer_addr, peer->addr, ESP_NOW_ETH_ALEN);
+            ESP_ERROR_CHECK(esp_now_add_peer(&send_peer));
+            
+            peer->radio_mode = ESPNOW_DATA_UNICAST;
+
+            *state = AUTH;
+            break;
+
+        case AUTH:
+            ESP_LOGI("PROCESS_RECV_EVENT()::AUTH", "Hello from auth");
+            break;
+
+        default:
+    }
+
+    // switch (s_session_state)
+    //   case HELLO
+    //       if ( msg_recv is HELLO message )
+    //           get oth_key
+    //           get oth mac addr
+    //           set to unicast
+    //           change callback functions
+
+    //           s_session_state = AUTHENTICATE
+
+    //   case AUTHENTICATE
+    //       get signature
+    //       biuld signature
+
+    //   case SESSION_OK
+    //       verify signature
+    //       HKDF
+}
+
+static void prime_radio(espnow_communication_params_t *params) {
+    espnow_data_peer_info_t *send_peer = &params->send_peer;
+    espnow_data_public_keys_t *pubkeys = &params->keys.public;
+
+    espnow_data_hello_t hello_buf = {
+        .type = params->session_info.type,
+        .version = params->session_info.version,
+        .length = sizeof(espnow_data_hello_t),
+    };
+    memcpy(hello_buf.ed25519_pub, pubkeys->ed25519_pub, ED25519_PUBKEY_LEN);
+    memcpy(hello_buf.x25519_pub, pubkeys->x25519_pub, X25519_EPH_PUBKEY_LEN);
+
+    ESP_ERROR_CHECK( esp_now_send(send_peer->addr, (uint8_t *)&hello_buf, sizeof(espnow_data_hello_t)) );
+}
+
+// Initializes all cryptographic parameters and related session info
+static void init_cryptographic_secrets(espnow_communication_params_t *params) {
+    memcpy(params->send_peer.addr, BROADCAST_MAC, ESP_NOW_ETH_ALEN);
+    memset(params->keys.public.ed25519_pub, 1, ED25519_PUBKEY_LEN);
+    memset(params->keys.public.x25519_pub, 2, ED25519_PUBKEY_LEN);
+}
+
 
 static void radio_task(void *pvParameter)
 {
     (void)pvParameter;
 
-    ESP_LOGI("RADIO_TASK", "Start Radio Task");
     espnow_event_t evt;
+    espnow_communication_params_t params;
 
-    // setup initial data packet
+    init_cryptographic_secrets(&params);
 
-    espnow_data_t data = {
-        .count = 0,
-        .msg = "DISCOVERY"};
-    memcpy(data.send_peer, s_broadcast_mac, ESP_NOW_ETH_ALEN);
+#ifdef RADIO_CLIENT
+    ESP_LOGI("radio_task()", "Start radio task, radio ready!");
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    prime_radio(&params);
+#endif
 
-    // send at least one packet on start
-    ESP_ERROR_CHECK(esp_now_send(s_broadcast_mac, (const uint8_t *)&data, sizeof(espnow_data_t)));
-
-    // task loop
     while (1)
     {
         // this queue is only populated AFTER a callback function is executed.
@@ -254,58 +351,15 @@ static void radio_task(void *pvParameter)
             switch (evt.id)
             {
             case ESPNOW_SEND_CB_EVT:
-                ESP_LOGI("RADIO_TASK", "message sent!");
-                // do some data manipulation
-                data.count += 1;
-
-                // ship the data over
-                ESP_ERROR_CHECK(esp_now_send(data.send_peer, (const uint8_t *)&data, sizeof(espnow_data_t)));
-                vTaskDelay(pdMS_TO_TICKS(200));
+                ESP_LOGI("RADIO_TASK()", "message sent!");
+                espnow_event_send_cb_t *send = &evt.info.send_cb;
+                process_send_event(&params, send);
                 break;
 
             case ESPNOW_RECV_CB_EVT:
                 // get data from event
                 espnow_event_recv_cb_t *recv = &evt.info.recv_cb;
-                if (recv->data_len != sizeof(espnow_data_t))
-                {
-                    ESP_LOGW("RADIO_TASK", "invalid packet length: %d", recv->data_len);
-                    free(recv->data);
-                    break;
-                }
-                espnow_data_t recv_data;
-                uint8_t *src_mac = recv->mac_addr;
-
-                memcpy(&recv_data, recv->data, sizeof(espnow_data_t));
-
-                // do something with the data
-                ESP_LOGI("RADIO_TASK",
-                         "message received: \n\tcount: %d\n\tmsg: %s\n\tSender MAC: %02x:%02x:%02x:%02x:%02x:%02x",
-                         recv_data.count,
-                         recv_data.msg,
-                         src_mac[0], src_mac[1], src_mac[2], src_mac[3], src_mac[4], src_mac[5]);
-
-                // we discovered another device, add as a peer and swap target to them
-                if (!IS_BROADCAST_ADDR(src_mac) && !s_has_peer)
-                {
-                    ESP_LOGI("RADIO TASK",
-                             "Adding Peer: Sender MAC: %02x:%02x:%02x:%02x:%02x:%02x",
-                             src_mac[0], src_mac[1], src_mac[2], src_mac[3], src_mac[4], src_mac[5]);
-                    memcpy(data.send_peer, src_mac, ESP_NOW_ETH_ALEN);
-
-                    esp_now_peer_info_t peer;
-                    peer.channel = WIFI_CHANNEL;
-                    peer.ifidx = WIFI_IF_STA;
-
-                    // set to true to use built in CCMP espnow
-                    peer.encrypt = false;
-                    memcpy(peer.peer_addr, src_mac, ESP_NOW_ETH_ALEN);
-                    ESP_ERROR_CHECK(esp_now_add_peer(&peer));
-
-                    // change the message to show difference in state
-                    memcpy(data.msg, "PEER FOUND", MESSAGE_LENGTH);
-                    s_has_peer = true;
-                }
-
+                process_recv_event(&params, recv);
                 free(recv->data);
                 break;
             default:
@@ -313,27 +367,7 @@ static void radio_task(void *pvParameter)
             }
         }
     }
-
-    /*
-    switch (evt.id):
-        case SEND:
-            // log we have sent a messaeg
-            // log unicast or brodacst
-            // log where we sent it to
-        case RECV:
-            switch (connection_state):
-                // hello message
-                case DISCOVERY:
-                case AUTH:
-                    if (auth == OK) {
-                        connection_state = SESSION_OK
-                    }
-                case SESSION_OK:
-                    // send messsage data using secrety key & session_ids
-                    */
-    // }
 }
-#endif
 
 /*
 entry point for application

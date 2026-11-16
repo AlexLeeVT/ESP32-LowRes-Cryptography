@@ -1,0 +1,630 @@
+Script started on 2026-11-14 19:23:04-05:00 [COMMAND="python ../tools/monitor.py -p /dev/ttyACM0" TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="148" LINES="47"]
+Executing action: monitor
+Running idf_monitor in directory /home/nano/Projects/ESP32-LowRes-Cryptography/bench_app
+Executing "/home/nano/.espressif/python_env/idf6.1_py3.14_env/bin/python /home/nano/.espressif/v6.1/esp-idf/tools/idf_monitor.py -p /dev/ttyACM0 -b 115200 --toolchain-prefix xtensa-esp32s3-elf- --target esp32s3 --revision 0 /home/nano/Projects/ESP32-LowRes-Cryptography/bench_app/build/espnow_bench.elf /home/nano/Projects/ESP32-LowRes-Cryptography/bench_app/build/crypto/espnow_bench.elf /home/nano/Projects/ESP32-LowRes-Cryptography/bench_app/build/bootloader/bootloader.elf /home/nano/Projects/ESP32-LowRes-Cryptography/bench_app/build/crypto/bootloader/bootloader.elf -m '/home/nano/.espressif/python_env/idf6.1_py3.14_env/bin/python' '/home/nano/.espressif/v6.1/esp-idf/tools/idf.py' '-p' '/dev/ttyACM0'"...
+--- esp-idf-monitor 1.10.0 on /dev/ttyACM0 115200
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x8 (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4037929a
+--- 0x4037929a: esp_cpu_wait_for_intr at /home/nano/.espressif/v6.1/esp-idf/components/esp_hw_support/cpu.c:64
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce2820,len:0x14f0
+load:0x403c8700,len:0xde4
+--- 0x403c8700: _stext at ??:?
+load:0x403cb700,len:0x2f58
+entry 0x403c8904
+--- 0x403c8904: call_start_cpu0 at /home/nano/.espressif/v6.1/esp-idf/components/bootloader/subproject/main/bootloader_start.c:27
+I (24) boot: ESP-IDF v6.1-dirty 2nd stage bootloader
+I (24) boot: compile time Nov 14 2026 18:28:35
+I (25) boot: Multicore bootloader
+I (25) boot: chip revision: v0.2
+I (28) boot: efuse block revision: v1.4
+I (31) boot.esp32s3: Boot SPI Speed : 80MHz
+I (35) boot.esp32s3: SPI Mode       : DIO
+I (39) boot.esp32s3: SPI Flash Size : 2MB
+I (43) boot: Enabling RNG early entropy source...
+I (47) boot: Partition Table:
+I (50) boot: ## Label            Usage          Type ST Offset   Length
+I (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (63) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (69) boot:  2 factory          factory app      00 00 00010000 00100000
+I (76) boot: End of partition table
+I (79) esp_image: segment 0: paddr=00010020 vaddr=3c030020 size=0e078h ( 57464) map
+I (97) esp_image: segment 1: paddr=0001e0a0 vaddr=3fc90d00 size=01f78h (  8056) load
+I (99) esp_image: segment 2: paddr=00020020 vaddr=42000020 size=27d3ch (163132) map
+I (131) esp_image: segment 3: paddr=00047d64 vaddr=3fc92c78 size=01464h (  5220) load
+I (133) esp_image: segment 4: paddr=000491d0 vaddr=40374000 size=0cc38h ( 52280) load
+I (147) esp_image: segment 5: paddr=00055e10 vaddr=50000000 size=00024h (    36) load
+I (153) boot: Loaded app from partition at offset 0x10000
+I (153) boot: Disabling RNG early entropy source...
+I (165) cpu_start: Multicore app
+I (173) cpu_start: GPIO 44 and 43 are used as console UART I/O pins
+I (174) cpu_start: Pro cpu start user code
+I (174) cpu_start: cpu freq: 160000000 Hz
+I (175) app_init: Application information:
+I (179) app_init: Project name:     espnow_bench
+I (184) app_init: App version:      f97a90a-dirty
+I (188) app_init: Compile time:     Nov 14 2026 18:28:23
+I (193) app_init: ELF file SHA256:  b2f3a8d9d...
+I (197) app_init: ESP-IDF:          v6.1-dirty
+I (201) efuse_init: Min chip rev:     v0.0
+I (205) efuse_init: Max chip rev:     v0.99 
+I (209) efuse_init: Chip rev:         v0.2
+I (213) heap_init: Initializing. RAM available for dynamic allocation:
+I (219) heap_init: At 3FC94EC0 len 00054850 (338 KiB): RAM
+I (225) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+I (230) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+I (235) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+I (241) spi_flash: detected chip: gd
+I (244) spi_flash: flash io: dio
+W (246) spi_flash: Detected size(8192k) larger than the size in the binary image header(2048k). Using the size in the binary image header.
+I (259) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (265) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (272) main_task: Started on CPU0
+I (272) main_task: Calling app_main()
+BENCH_START,crypto
+CPU_MHZ,160
+HEAP,crypto_start,373956
+CRYPTO,ascon128_enc_16,30226
+I (3292) main_task: Returned from app_main()
+CRYPTO,ascon128_enc_16,10665
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_enc_16,10520
+CRYPTO,ascon128_dec_16,25330
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_dec_16,10763
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_enc_64,17729
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_dec_64,17948
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_enc_128,27341
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_dec_128,27528
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_enc_224,41759
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+CRYPTO,ascon128_dec_224,41898
+STACK,crypto_after_ascon,15244
+CRYPTO,x25519_keygen,48267753
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267717
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267707
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267707
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267717
+CRYPTO,x25519_keygen,48267765
+CRYPTO,x25519_keygen,48267717
+CRYPTO,x25519_keygen,48267673
+CRYPTO,x25519_keygen,48267717
+CRYPTO,x25519_shared,48235935
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+CRYPTO,x25519_shared,48235470
+STACK,crypto_after_x25519,14716
+CRYPTO,ed25519_keygen,83722129
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691559
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691583
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691559
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691491
+CRYPTO,ed25519_keygen,83691491
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691537
+CRYPTO,ed25519_keygen,83691559
+CRYPTO,ed25519_sign_96,85420227
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_sign_96,85412785
+CRYPTO,ed25519_sign_96,85413481
+CRYPTO,ed25519_verify_96,384776184
+CRYPTO,ed25519_verify_96,384771540
+CRYPTO,ed25519_verify_96,384771513
+CRYPTO,ed25519_verify_96,384771674
+CRYPTO,ed25519_verify_96,384771439
+CRYPTO,ed25519_verify_96,384771674
+CRYPTO,ed25519_verify_96,384771513
+CRYPTO,ed25519_verify_96,384771540
+CRYPTO,ed25519_verify_96,384771513
+CRYPTO,ed25519_verify_96,384771674
+CRYPTO,ed25519_verify_96,384771439
+CRYPTO,ed25519_verify_96,384771674
+CRYPTO,ed25519_verify_96,384771513
+CRYPTO,ed25519_verify_96,384771540
+CRYPTO,ed25519_verify_96,384771513
+CRYPTO,ed25519_verify_96,384771674
+CRYPTO,ed25519_verify_96,384771439
+CRYPTO,ed25519_verify_96,384771674
+CRYPTO,ed25519_verify_96,384771513
+CRYPTO,ed25519_verify_96,384771540
+STACK,crypto_after_ed25519,14236
+CRYPTO,hkdf_sha256_32,112119
+CRYPTO,hkdf_sha256_32,60061
+CRYPTO,hkdf_sha256_32,60515
+CRYPTO,hkdf_sha256_32,56677
+CRYPTO,hkdf_sha256_32,60113
+CRYPTO,hkdf_sha256_32,56569
+CRYPTO,hkdf_sha256_32,60115
+CRYPTO,hkdf_sha256_32,56571
+CRYPTO,hkdf_sha256_32,60109
+CRYPTO,hkdf_sha256_32,56555
+CRYPTO,hkdf_sha256_32,60105
+CRYPTO,hkdf_sha256_32,56557
+CRYPTO,hkdf_sha256_32,60113
+CRYPTO,hkdf_sha256_32,56561
+CRYPTO,hkdf_sha256_32,60111
+CRYPTO,hkdf_sha256_32,56577
+CRYPTO,hkdf_sha256_32,60115
+CRYPTO,hkdf_sha256_32,56571
+CRYPTO,hkdf_sha256_32,60107
+CRYPTO,hkdf_sha256_32,56571
+CRYPTO,hkdf_sha256_32,60107
+CRYPTO,hkdf_sha256_32,56565
+CRYPTO,hkdf_sha256_32,60111
+CRYPTO,hkdf_sha256_32,56571
+CRYPTO,hkdf_sha256_32,60109
+CRYPTO,hkdf_sha256_32,56567
+CRYPTO,hkdf_sha256_32,60117
+CRYPTO,hkdf_sha256_32,56563
+CRYPTO,hkdf_sha256_32,60117
+CRYPTO,hkdf_sha256_32,56571
+CRYPTO,hkdf_sha256_32,60115
+CRYPTO,hkdf_sha256_32,56569
+CRYPTO,hkdf_sha256_32,60117
+CRYPTO,hkdf_sha256_32,56561
+CRYPTO,hkdf_sha256_32,60105
+CRYPTO,hkdf_sha256_32,56565
+CRYPTO,hkdf_sha256_32,60109
+CRYPTO,hkdf_sha256_32,56565
+CRYPTO,hkdf_sha256_32,60109
+CRYPTO,hkdf_sha256_32,56565
+CRYPTO,hkdf_sha256_32,60111
+CRYPTO,hkdf_sha256_32,56561
+CRYPTO,hkdf_sha256_32,60111
+CRYPTO,hkdf_sha256_32,56569
+CRYPTO,hkdf_sha256_32,60115
+CRYPTO,hkdf_sha256_32,56563
+CRYPTO,hkdf_sha256_32,60117
+CRYPTO,hkdf_sha256_32,56547
+CRYPTO,hkdf_sha256_32,60115
+CRYPTO,hkdf_sha256_32,56563
+STACK,crypto_after_hkdf,14236
+MINHEAP,crypto_end,373592
+BENCH_DONE
+
+
+Script done on 2026-11-14 19:26:33-05:00 [COMMAND_EXIT_CODE="0"]
