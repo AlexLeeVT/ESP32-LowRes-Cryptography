@@ -1,2 +1,5 @@
-idf_component_register(SRCS "crypto_main.c" "bench_measure.c" "main.c" "compact25519/compact25519.c" "ascon/aead.c"
-                    INCLUDE_DIRS ".")
+idf_component_register(
+    SRCS "crypto_main.c" "bench_measure.c" "main.c" "compact25519/compact25519.c" "ascon/aead.c"
+    INCLUDE_DIRS "."
+    REQUIRES mbedtls esp_timer esp_wifi nvs_flash
+    )

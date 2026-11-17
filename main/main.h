@@ -10,7 +10,8 @@
 // cryptography includes
 #include "crypto_main.h"
 
-#define RADIO_CLIENT
+// #define RADIO_CLIENT
+#define RADIO_SERVER
 
 // hardware macros
 #define HIGH 1
@@ -22,6 +23,8 @@
 // espnow macros
 #define ESPNOW_QUEUE_SIZE 6
 #define IS_BROADCAST_ADDR(addr) (memcmp(addr, BROADCAST_MAC, ESP_NOW_ETH_ALEN) == 0)
+#define PLAINTEXT_LEN 32
+#define ENCRYPTED_PACKET_SIZE CRYPT_DATA_FIXED_LEN + PLAINTEXT_LEN + CRYPT_TAG_LEN
 
 /**
  * ------------------------------------DISCLAIMER--------------------------------------------- 
@@ -34,7 +37,7 @@
  * Good practice is to load it from an environment variable or a local file and **never** uploaded anywhere.
  * ------------------------------------DISCLAIMER--------------------------------------------- 
  */
-#ifdef RADIO_CLIENT
+#if defined( RADIO_CLIENT )
 static const uint8_t device_private_key[64] = {
     0x0c, 0x09, 0xe0, 0x7d, 0x0d, 0x59, 0x0e, 0x87, 
     0xdf, 0xba, 0x34, 0x40, 0x7e, 0x99, 0xd3, 0x9f, 
@@ -51,7 +54,7 @@ static const uint8_t device_public_key[32] = {
     0x89, 0x14, 0x8d, 0x57, 0xae, 0xc4, 0x7b, 0x0d, 
     0x85, 0x3f, 0xbb, 0x70, 0x23, 0xb5, 0x61, 0x23
 };
-#elif RADIO_SERVER
+#elif defined( RADIO_SERVER )
 static const uint8_t device_private_key[64] = {
     0xd7, 0xc7, 0x12, 0x19, 0xe6, 0x77, 0x6a, 0xdd, 
     0xdc, 0x05, 0x12, 0x88, 0x8d, 0xe9, 0x25, 0x45, 
@@ -115,6 +118,7 @@ typedef enum
 
 typedef enum
 {
+    AWAIT,
     DISCOVER,
     AUTH,
     SESSION_OK
@@ -130,6 +134,8 @@ typedef struct {
 
     uint8_t hello_packet[CRYPT_HELLO_LEN];
     uint8_t auth_packet[CRYPT_AUTH_LEN];
+    uint8_t encrypted_packet[ENCRYPTED_PACKET_SIZE];
+    size_t encrypted_len, decrypted_len;
 } espnow_communication_params_t;
 
 #endif /* MAIN_H */

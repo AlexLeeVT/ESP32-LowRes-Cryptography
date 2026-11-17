@@ -2,6 +2,9 @@
 
 // C includes
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 
 // FreeRTOS libs
 #include "freertos/FreeRTOS.h"
@@ -9,22 +12,17 @@
 
 // ESP32 Hardware Libraries
 #include "esp_log.h"
-#include "driver/gpio.h"
 
 // ESP32 WIFI Libs
 #include "nvs_flash.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif.h"
-#include "nvs_flash.h"
 #include "esp_mac.h"
 #include "esp_now.h"
 
 // Primitive and Crypt Libraries
 #include "esp_random.h"
-// #include <ascon/ascon.h>
-// #include <ascon/constants.h>
-// #include <ascon/crypto_aead.h>
 
 /**
  * Define the types of radio as either:
@@ -152,6 +150,10 @@ static esp_err_t init_espnow()
     return ESP_OK;
 }
 
+static void prime_radio(espnow_communication_params_t *params) { 
+    ESP_ERROR_CHECK( esp_now_send(params->espnow_peer_addr, params->hello_packet, CRYPT_HELLO_LEN) );
+}
+
 /*
 shutdown espnow if we run into any issues.
 */
@@ -185,26 +187,28 @@ Input:
 */
 static void process_send_event(espnow_communication_params_t *params, espnow_event_send_cb_t *send)
 {
+    static int auth_timeout = 0;
     espnow_crypto_state_t *state = &params->espnow_crypto_state;
     uint8_t *peer_addr = params->espnow_peer_addr;
 
     switch (*state) 
     {
+        case AWAIT:
+            // do nothing
+            break;
         // broadcast the hello message
         case DISCOVER:
-#ifdef  RADIO_CLIENT
-            ESP_ERROR_CHECK(esp_now_send(peer_addr, (uint8_t *)params->hello_packet, CRYPT_HELLO_LEN));
+            auth_timeout = 0;
+            ESP_ERROR_CHECK(esp_now_send(peer_addr, params->hello_packet, CRYPT_HELLO_LEN));
             if(send->status != ESP_NOW_SEND_SUCCESS) ESP_LOGI("PROCESS_SEND_EVENT()::DISCOVER", "message not received by recipient.");
-#elif   RADIO_SERVER
-#endif
+            ESP_LOGI("process_send_event()::DISCOVER", "hello msg sent!");
             // let radio rest
-            // vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(100));
             break;
 
         case AUTH:
             // if we don't reach the other person, try again
             ESP_LOGI("process_send_event()::AUTH", "Sending Auth Packet");
-            static int auth_timeout = 0;
 
             if(auth_timeout > 15) { // timeout and retry
                 ESP_LOGI("process_send_event()::AUTH", "Failed to send Auth packet, returning to discover phase");
@@ -217,11 +221,13 @@ static void process_send_event(espnow_communication_params_t *params, espnow_eve
                 // return to discovery state
                 *state = DISCOVER;
                 prime_radio(params);
+                
+                return;
             }
 
             if (send->status != ESP_NOW_SEND_SUCCESS) { // 
                 auth_timeout = auth_timeout + 1;
-                esp_now_send(peer_addr, (uint8_t *)params->auth_packet, CRYPT_AUTH_LEN);
+                esp_now_send(peer_addr, params->auth_packet, CRYPT_AUTH_LEN);
                 vTaskDelay(pdMS_TO_TICKS(200));
 
                 ESP_LOGI("process_send_event()::AUTH", ".");
@@ -231,6 +237,7 @@ static void process_send_event(espnow_communication_params_t *params, espnow_eve
             break;
 
         case SESSION_OK:
+            ESP_LOGI("process_send_event()::SESSION_OK", "Hello from session ok send");
             // encrypt the message
             // send the ciphertext
             break;
@@ -238,9 +245,6 @@ static void process_send_event(espnow_communication_params_t *params, espnow_eve
         default:
     }
 
-    //   case AUTHENTICATE
-    //       generate signature
-    //       Unicast Auth Message
 
     //   case SESSION_OK
     //       encrypt message
@@ -256,23 +260,28 @@ static void process_recv_event(espnow_communication_params_t *params, espnow_eve
     uint8_t *peer_mac = params->espnow_peer_addr;
 
     // get data
-    uint8_t *recv_data;
-    memcpy(&recv_data, recv->data, recv->data_len);
+    if (recv == NULL || recv->data == NULL ||
+        recv->data_len <= 0 || recv->data_len > ESP_NOW_MAX_DATA_LEN) { 
+            return; 
+    }
+
+    uint8_t *recv_data = malloc(recv->data_len);
+    memcpy(recv_data, recv->data, recv->data_len);
 
     switch(*state)
     {
-        // we received a hello message back from the server, move on to the next state
-        case DISCOVER:
-            // get data
-            memcpy(peer_mac, recv->mac_addr, ESP_NOW_ETH_ALEN);
-
+        case AWAIT:
+#if defined( RADIO_SERVER )
             // parse data for peer
-            if(crypt_parse_hello(recv_data, CRYPT_HELLO_LEN, &params->session.peer) != 0) {
-                free(recv->data);
-                return;
+            ESP_LOGI("PROCESS_RECV_EVENT()::AWAIT", "Parsing Hello packet");
+            if(crypt_parse_hello(recv_data, recv->data_len, &params->session.peer) != 0) {
+                ESP_LOGI("PROCESS_RECV_EVENT()::AWAIT", "Failed parsing Hello packet");
+                // free(recv->data);
+                break;
             }
             
             // add device to peer list
+            memcpy(peer_mac, recv->mac_addr, ESP_NOW_ETH_ALEN);
             esp_now_peer_info_t send_peer;
             send_peer.channel = WIFI_CHANNEL;
             send_peer.ifidx = WIFI_IF_STA;
@@ -280,8 +289,39 @@ static void process_recv_event(espnow_communication_params_t *params, espnow_eve
             memcpy(send_peer.peer_addr, peer_mac, ESP_NOW_ETH_ALEN);
             ESP_ERROR_CHECK(esp_now_add_peer(&send_peer));
 
+            ESP_LOGI("process_recv_event()::AWAIT", "change state to DISCOVER");
+            *state = DISCOVER;
+            prime_radio(params);
+            break;
+        // we received a hello message back from the server, move on to the next state
+#endif
+        case DISCOVER:
+#if defined (RADIO_CLIENT)
+            // parse data for peer
+            ESP_LOGI("PROCESS_RECV_EVENT()::DISCOVER", "Parsing Hello packet");
+            if(crypt_parse_hello(recv_data, recv->data_len, &params->session.peer) != 0) {
+                ESP_LOGI("PROCESS_RECV_EVENT()::DISCOVER", "Failed parsing Hello packet");
+                // free(recv->data);
+                break;
+            }
+            
+            // add device to peer list
+            memcpy(peer_mac, recv->mac_addr, ESP_NOW_ETH_ALEN);
+            esp_now_peer_info_t send_peer;
+            send_peer.channel = WIFI_CHANNEL;
+            send_peer.ifidx = WIFI_IF_STA;
+            send_peer.encrypt = false; // set to true to use built in CCMP for espnow
+            memcpy(send_peer.peer_addr, peer_mac, ESP_NOW_ETH_ALEN);
+            ESP_ERROR_CHECK(esp_now_add_peer(&send_peer));
+#endif
             // crate auth shared keys and generate encrypted nonce
-            crypt_make_auth(params->auth_packet, &params->session, device_private_key);
+            if(crypt_make_auth(params->auth_packet, &params->session, device_private_key)) {
+                ESP_LOGI("process_recv_event()::DISCOVER", "Error making auth message!");
+            }
+            ESP_LOGI("PROCESS_RECV_EVENT()::DISCOVER", "Added peer %02x:%02x:%02x:%02x:%02x:%02x", 
+                peer_mac[0], peer_mac[1], peer_mac[2], peer_mac[3], peer_mac[4], peer_mac[5]
+            );
+            esp_now_send(peer_mac, params->auth_packet, CRYPT_AUTH_LEN);
 
             // switch state
             *state = AUTH;
@@ -289,22 +329,30 @@ static void process_recv_event(espnow_communication_params_t *params, espnow_eve
             break;
 
         case AUTH: // We got the auth packet! Lets see if it is good.
-            // if the nonce can be decrypted and it matches the nonce we sent, then we know the other person has the shared key.
-            if (accept_auth(recv_data, recv->data_len, &params->session) != 0) {
-                ESP_LOGI("process_recv_event()::AUTH", "Verification failed, rejecting peer");
+            int result = accept_auth(recv_data, recv->data_len, &params->session);
+
+            // clear the buffer until we get to the auth data 
+            if(recv_data[1] != CRYPT_TYPE_AUTH) {
+                ESP_LOGI("process_recv_event()::AUTH", "Not an AUTH packet! skipping");
+                break;
+            }
+
+            // verify the authentication
+            if (result != 0) {
+                ESP_LOGI("process_recv_event::AUTH", "AUTH result=%d type=%u len=%d", result,
+                    recv->data_len >= 2 ? recv_data[1] : 0, recv->data_len);
 
                 // remove peer from peer list
                 esp_now_del_peer(params->espnow_peer_addr);
                 memcpy(params->espnow_peer_addr, BROADCAST_MAC, ESP_NOW_ETH_ALEN);
 
-                free(recv->data);
+                // free(recv->data);
 
                 // return to discovery state
                 *state = DISCOVER;
                 prime_radio(params);
+                break;
             }
-                // move on to SESSION_OK and store the shared key
-            // otherwise, go deny the connection, remove the peer, go back to broadcast mode, and set the mode to HELLO.
             ESP_LOGI("process_recv_event()::AUTH", "Verification succeeded, SESSION_OK!");
 
             *state = SESSION_OK;
@@ -319,35 +367,46 @@ static void process_recv_event(espnow_communication_params_t *params, espnow_eve
         default:
     }
 
+    free(recv_data);
     free(recv->data);
 }
 
-static void prime_radio(espnow_communication_params_t *params) { 
-    ESP_ERROR_CHECK( esp_now_send(params->espnow_peer_addr, params->hello_packet, CRYPT_HELLO_LEN) );
+static int esp_random_wrapper(uint8_t *out, size_t length)
+{
+    esp_fill_random(out, length);
+    return 0;
 }
 
 // Initializes all cryptographic parameters and related session info
 static void init_cryptographic_parameters(espnow_communication_params_t *params) {
     memcpy(params->espnow_peer_addr, BROADCAST_MAC, ESP_NOW_ETH_ALEN);
-    uint8_t *hello_packet = params->hello_packet;
+#if defined(RADIO_CLIENT)
+    params->espnow_crypto_state = DISCOVER;
+#elif defined(RADIO_SERVER)
+    params->espnow_crypto_state = AWAIT;
+#endif
 
     // create and store the hello packet once
-    crypt_make_hello_packet(hello_packet, device_private_key, &params->session.local, esp_random);
+    crypt_make_hello_packet(params->hello_packet, device_private_key, &params->session.local, esp_random_wrapper);
 }
 
 static void radio_task(void *pvParameter)
 {
     (void)pvParameter;
 
+    ESP_LOGI("radio_task()", "Starting the radio task.");
+
     espnow_event_t evt;
     espnow_communication_params_t params;
 
     init_cryptographic_parameters(&params);
 
-#ifdef RADIO_CLIENT
-    ESP_LOGI("radio_task()", "Start radio task, radio ready!");
-    vTaskDelay(pdMS_TO_TICKS(5000));
+#if defined(RADIO_CLIENT)
+    ESP_LOGI("radio_task()::CLIENT", "Radio ready!");
+    vTaskDelay(pdMS_TO_TICKS(3000));
     prime_radio(&params);
+#elif defined(RADIO_SERVER)
+    ESP_LOGI("radio_task()::SERVER", "Radio ready!");
 #endif
 
     while (1)
@@ -393,5 +452,5 @@ void app_main(void)
 
     get_mac_address();
 
-    xTaskCreate(radio_task, "radio_task", 2048, NULL, 4, NULL);
+    xTaskCreate(radio_task, "radio_task", 8192, NULL, 4, NULL);
 }
