@@ -240,11 +240,11 @@ static void process_send_event(espnow_communication_params_t *params, espnow_eve
             ESP_LOGI("process_send_event()::SESSION_OK", "Hello from session ok send");
             // encrypt the message
             // send the ciphertext
+            
             break;
 
         default:
     }
-
 
     //   case SESSION_OK
     //       encrypt message
@@ -357,10 +357,70 @@ static void process_recv_event(espnow_communication_params_t *params, espnow_eve
 
             *state = SESSION_OK;
             // send a single SESSION_OK packet
+
+#if defined(RADIO_CLIENT)
+            crypt_data_encrypt(
+                &params->session,
+                params->session.outgoing_counter_initialized
+                    ? params->session.last_outgoing_counter + 1
+                    : 1,
+                (const uint8_t *) "Hello from Client",
+                PLAINTEXT_LEN,
+                params->encrypted_packet,
+                sizeof(params->encrypted_packet),
+                &params->encrypted_len
+            );
+
+            esp_now_send(params->espnow_peer_addr, params->encrypted_packet, params->encrypted_len);
+#endif
+
+
             break;
 
         case SESSION_OK:
             // decrypt the message with the shared key.
+            ESP_LOGI("process_recv_event()::SESSION_OK", "Decrypt debug message");
+
+            uint64_t incoming_counter =
+                params->session.incoming_counter_initialized
+                    ? params->session.last_incoming_counter + 1
+                    : 1;
+
+            uint8_t decrypted_message[PLAINTEXT_LEN];
+            int ret = crypt_data_decrypt(
+                &params->session,
+                recv_data,
+                recv->data_len,
+                incoming_counter,
+                decrypted_message,
+                sizeof(decrypted_message),
+                &params->decrypted_len
+            );
+
+            ESP_LOGI("process_recv_event::SESSION_OK", "Data: %s", decrypted_message);
+
+            if (ret == 0)
+            {
+
+            // ping pong the data
+            crypt_data_encrypt(
+                &params->session,
+                params->session.outgoing_counter_initialized
+                    ? params->session.last_outgoing_counter + 1
+                    : 1,
+#if defined (RADIO_CLIENT)
+                (const uint8_t *) "Hello from Client",
+#elif defined (RADIO_SERVER)
+                (const uint8_t *) "Hello from Server",
+#endif
+                PLAINTEXT_LEN,
+                params->encrypted_packet,
+                sizeof(params->encrypted_packet),
+                &params->encrypted_len
+            );
+
+            esp_now_send(params->espnow_peer_addr, params->encrypted_packet, params->encrypted_len);
+            }
 
             break;
 
@@ -385,6 +445,7 @@ static void init_cryptographic_parameters(espnow_communication_params_t *params)
 #elif defined(RADIO_SERVER)
     params->espnow_crypto_state = AWAIT;
 #endif
+    params->ready = 0;
 
     // create and store the hello packet once
     crypt_make_hello_packet(params->hello_packet, device_private_key, &params->session.local, esp_random_wrapper);

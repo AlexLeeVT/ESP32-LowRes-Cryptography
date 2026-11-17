@@ -10,8 +10,8 @@
 // cryptography includes
 #include "crypto_main.h"
 
-// #define RADIO_CLIENT
-#define RADIO_SERVER
+#define RADIO_CLIENT
+// #define RADIO_SERVER
 
 // hardware macros
 #define HIGH 1
@@ -136,6 +136,7 @@ typedef struct {
     uint8_t auth_packet[CRYPT_AUTH_LEN];
     uint8_t encrypted_packet[ENCRYPTED_PACKET_SIZE];
     size_t encrypted_len, decrypted_len;
+    bool ready;
 } espnow_communication_params_t;
 
 #endif /* MAIN_H */
