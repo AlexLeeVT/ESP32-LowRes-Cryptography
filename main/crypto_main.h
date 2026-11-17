@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "Semester Project/compact25519/compact25519.h"
+#include "compact25519/compact25519.h"
 
 #define CRYPT_VERSION 1u
 #define CRYPT_PROTOCOL_ID "CS5584-ESP32-v1"
@@ -22,6 +22,7 @@
 #define CRYPT_TAG_LEN 16u
 #define CRYPT_KEY_LEN 16u
 #define CRYPT_NONCE_LEN 16u
+#define CRYPT_SESSION_ID_LEN 8u
 
 typedef int (*crypt_random_fn)(uint8_t *out, size_t length);
 
@@ -35,7 +36,7 @@ typedef struct {
 typedef struct {
     crypt_hello_t local;
     crypt_hello_t peer;
-    uint8_t session_id[8];
+    uint8_t session_id[CRYPT_SESSION_ID_LEN];
     uint8_t outgoing_aead_key[CRYPT_KEY_LEN];
     uint8_t incoming_aead_key[CRYPT_KEY_LEN];
     bool local_is_a;
@@ -45,6 +46,10 @@ typedef struct {
     uint64_t last_outgoing_counter;
     uint64_t last_incoming_counter;
 } crypt_session_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int crypt_make_hello_packet(
     uint8_t packet[CRYPT_HELLO_LEN],
@@ -71,6 +76,24 @@ int accept_auth(
     const uint8_t *packet,
     size_t packet_len,
     crypt_session_t *session);
+
+int crypt_data_encrypt(
+    crypt_session_t *session,
+    uint64_t counter,
+    const uint8_t *plaintext,
+    size_t plaintext_len,
+    uint8_t *packet,
+    size_t packet_capacity,
+    size_t *packet_len);
+
+int crypt_data_decrypt(
+    crypt_session_t *session,
+    const uint8_t *packet,
+    size_t packet_len,
+    uint64_t expected_counter,
+    uint8_t *plaintext,
+    size_t plaintext_capacity,
+    size_t *plaintext_len);
 
 #ifdef __cplusplus
 }
